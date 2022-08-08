@@ -82,6 +82,13 @@ func (f *ForkChoice) ReorgNeeded(current *types.Header, header *types.Header) (b
 	if localTD == nil || externTd == nil {
 		return false, errors.New("missing td")
 	}
+
+	if current.Number.Cmp(header.Number) == 0 {
+		// Reject single-block reorgs to mitigate uncle maker attack.
+		// Refer to https://eprint.iacr.org/2022/1020 for more info.
+		return false, nil
+	}
+
 	// If the total difficulty is higher than our known, add it to the canonical chain
 	// Second clause in the if statement reduces the vulnerability to selfish mining.
 	// Please refer to http://www.cs.cornell.edu/~ie53/publications/btcProcFC.pdf
